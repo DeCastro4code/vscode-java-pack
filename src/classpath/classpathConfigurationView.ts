@@ -5,7 +5,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { getExtensionContext, getNonce } from "../utils";
 import * as fse from "fs-extra";
-import { ProjectInfo, ClasspathComponent, ClasspathViewException, VmInstall } from "./types";
+import { ProjectInfo, ClasspathComponent, ClasspathViewException, VmInstall, SourceRoot } from "./types";
 import _ from "lodash";
 import minimatch from "minimatch";
 import { instrumentOperation, sendError, sendInfo, setUserError } from "vscode-extension-telemetry-wrapper";
@@ -16,10 +16,11 @@ import compareVersions from "compare-versions";
 let classpathConfigurationPanel: vscode.WebviewPanel | undefined;
 let lsApi: LanguageServerAPI | undefined;
 let currentProjectRoot: vscode.Uri;
-const Nature_IDS: string = "org.eclipse.jdt.ls.core.natureIds"
+const NATURE_IDS: string = "org.eclipse.jdt.ls.core.natureIds"
 const SOURCE_PATH_KEY: string = "org.eclipse.jdt.ls.core.sourcePaths";
 const OUTPUT_PATH_KEY: string = "org.eclipse.jdt.ls.core.outputPath";
 const VM_LOCATION_KEY: string = "org.eclipse.jdt.ls.core.vm.location";
+const CLASSPATH_ENTRIES_KEY: string = "org.eclipse.jdt.ls.core.classpathEntries";
 const REFERENCED_LIBRARIES_KEY: string = "org.eclipse.jdt.ls.core.referencedLibraries";
 const MINIMUM_JAVA_EXTENSION_VERSION: string = "0.77.0";
 
@@ -81,6 +82,12 @@ async function initializeWebview(context: vscode.ExtensionContext): Promise<void
                     break;
                 case "onWillAddSourcePath":
                     await addSourcePath(currentProjectRoot);
+                    break;
+                case "onWillBrowseFolder":
+                    await browseFolder(currentProjectRoot, message.type);
+                    break;
+                case "onWillUpdateSourcePath":
+                    await updateSourcePaths(currentProjectRoot, message.sourcePaths);
                     break;
                 case "onWillChangeJdk":
                     await changeJdk(currentProjectRoot, message.jdkPath);
@@ -291,6 +298,52 @@ const addSourcePath = instrumentOperation("classpath.addSourcePath", async (_ope
     }
 });
 
+const browseFolder= instrumentOperation("classpath.browseFolder", async (_operationId: string, currentProjectRoot: vscode.Uri, type: string) => {
+    const folder: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
+        defaultUri: vscode.workspace.workspaceFolders?.[0].uri,
+        openLabel: "Select Folder",
+        canSelectFiles: false,
+        canSelectFolders: true,
+        canSelectMany: false,
+    });
+
+    if (folder) {
+        const sourceFolderPath: string = folder[0].fsPath;
+        const projectRootPath: string = currentProjectRoot.fsPath;
+        let relativePath: string = path.relative(projectRootPath, sourceFolderPath);
+        if (relativePath.startsWith("..")) {
+            const err: Error = new Error("The selected path must be contained in the project root folder.");
+            vscode.window.showErrorMessage(err.message);
+            setUserError(err);
+            throw(err);
+        }
+        if (!relativePath) {
+            relativePath = ".";
+        }
+        classpathConfigurationPanel?.webview.postMessage({
+            command: "onDidBrowseFolder",
+            path: relativePath,
+            type: type,
+        });
+    }
+});
+
+const updateSourcePaths = instrumentOperation("classpath.updateSourcePaths", async (_operationId: string, currentProjectRoot: vscode.Uri, sourcePaths: SourceRoot[]) => {
+    const stringifiedSourcePaths: string[] = sourcePaths.map((sourcePath: SourceRoot) => {
+        return JSON.stringify({
+            kind: 3,
+            path: sourcePath.path,
+            output: sourcePath.output,
+        });
+    });
+    await vscode.commands.executeCommand(
+        "java.execute.workspaceCommand",
+        "java.project.updateSourcePaths",
+        currentProjectRoot.toString(),
+        stringifiedSourcePaths,
+    );
+});
+
 const removeSourcePath = instrumentOperation("classpath.removeSourcePath", (_operationId: string, currentProjectRoot: vscode.Uri, sourcePaths: string[]) => {
     vscode.workspace.getConfiguration("java", currentProjectRoot).update(
         "project.sourcePaths",
@@ -491,10 +544,11 @@ async function getVmInstallsFromLS(): Promise<VmInstall[]> {
 
 async function getProjectClasspathFromLS(uri: vscode.Uri): Promise<ClasspathComponent> {
     const queryKeys: string[] = [
-        Nature_IDS,
+        NATURE_IDS,
         SOURCE_PATH_KEY,
         OUTPUT_PATH_KEY,
         VM_LOCATION_KEY,
+        CLASSPATH_ENTRIES_KEY,
         REFERENCED_LIBRARIES_KEY
     ];
 
@@ -503,23 +557,13 @@ async function getProjectClasspathFromLS(uri: vscode.Uri): Promise<ClasspathComp
         queryKeys
     );
     const classpath: ClasspathComponent = {
-        projectType: getProjectType(uri.fsPath, response[Nature_IDS] as string[]),
-        sourcePaths: response[SOURCE_PATH_KEY] as string[],
+        projectType: getProjectType(uri.fsPath, response[NATURE_IDS] as string[]),
+        sourcePaths: getSourceRoots(response[CLASSPATH_ENTRIES_KEY], uri),
         defaultOutputPath: response[OUTPUT_PATH_KEY] as string,
         jdkPath: response[VM_LOCATION_KEY] as string,
         referenceLibraries: response[REFERENCED_LIBRARIES_KEY] as string[],
     };
     const baseFsPath = uri.fsPath;
-
-    classpath.sourcePaths = classpath.sourcePaths.map(p => {
-        const relativePath: string = path.relative(baseFsPath, p);
-        if (!relativePath) {
-            return ".";
-        }
-        return relativePath;
-    }).sort((srcA: string, srcB: string) => {
-        return srcA.localeCompare(srcB);
-    });
 
     const outputRelativePath: string = path.relative(baseFsPath, classpath.defaultOutputPath);
     if (!outputRelativePath.startsWith("..")) {
@@ -545,6 +589,34 @@ async function getProjectClasspathFromLS(uri: vscode.Uri): Promise<ClasspathComp
         }
     });
     return classpath;
+}
+
+function getSourceRoots(classpathEntries: ClasspathEntry[], baseUri: vscode.Uri): SourceRoot[] {
+    const result: SourceRoot[] = [];
+    const baseFsPath = baseUri.fsPath;
+    for (const entry of classpathEntries) {
+        if (entry.kind !== 3) {
+            continue;
+        }
+        let relativePath: string = path.relative(baseFsPath, entry.path);
+        if (!relativePath) {
+            relativePath = ".";
+        }
+        let relativeOutputPath: string | undefined;
+        if (entry.output) {
+            relativeOutputPath = path.relative(baseFsPath, entry.output);
+            if (!relativeOutputPath) {
+                relativeOutputPath = ".";
+            }
+        }
+        result.push({
+            path: relativePath,
+            output: relativeOutputPath,
+        });
+    }
+    return result.sort((srcA: SourceRoot, srcB: SourceRoot) => {
+        return srcA.path.localeCompare(srcB.path);
+    });
 }
 
 function getReferencedLibrariesSetting(): IReferencedLibraries {
@@ -597,6 +669,12 @@ interface LanguageServerAPI {
     onDidProjectsImport: vscode.Event<vscode.Uri>;
     onDidClasspathUpdate: vscode.Event<vscode.Uri>;
     getProjectSettings: (uri: string, SettingKeys: string[]) => Promise<any>;
+}
+
+interface ClasspathEntry {
+    kind: number;
+    path: string;
+    output: string | undefined;
 }
 
 interface IReferencedLibraries {

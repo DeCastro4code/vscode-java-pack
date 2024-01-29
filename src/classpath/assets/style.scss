@@ -83,16 +83,33 @@
   color: var(--vscode-editorWarning-foreground);
 }
 
+.setting-section-button {
+  margin-top: calc(var(--design-unit) * 1px);
+}
+
 .setting-section-grid-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   padding-left: 4px;
- 
   .setting-section-grid-row-header {
     font-weight: 700;
   }
- 
+  .setting-section-grid-cell {
+    padding: 0;
+    display: flex;
+    align-items: center;
+  }
+  .setting-section-grid-cell-readonly {
+    justify-content: space-between;
+  }
+  .setting-section-grid-cell-editable {
+    justify-content: end;
+  }
+  .setting-section-grid-text {
+    flex-grow: 1;
+  }
+  .setting-section-grid-button {
+    margin-left: calc(var(--design-unit) * 1px);
+  }
+
   span {
     font-size: 12.8px;
     line-height: 22px;
@@ -107,6 +124,10 @@
 
 .inactive {
   opacity: 0.67;
+}
+
+.hidden {
+  visibility: hidden;
 }
 
 @import "~@vscode/codicons/dist/codicon.css";

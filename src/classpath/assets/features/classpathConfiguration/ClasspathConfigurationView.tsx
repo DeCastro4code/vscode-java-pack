@@ -10,14 +10,17 @@ import Sources from "./components/Sources";
 import ReferencedLibraries from "./components/ReferencedLibraries";
 import Header from "./components/Header";
 import Exception from "./components/Exception";
-import { ClasspathViewException, ProjectInfo, VmInstall } from "../../../types";
+import { ClasspathViewException, ProjectInfo, SourceRoot, VmInstall } from "../../../types";
 import { catchException, listProjects, listVmInstalls, loadClasspath } from "./classpathConfigurationViewSlice";
 import JdkRuntime from "./components/JdkRuntime";
 import { onWillListProjects, onWillListVmInstalls } from "../../utils";
 import { VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react";
+import { ProjectType } from "../../../../utils/webview";
+import UnmanagedFolderSources from "./components/UnmanagedFolderSources";
 
 const ClasspathConfigurationView = (): JSX.Element => {
   const projects: ProjectInfo[] = useSelector((state: any) => state.classpathConfig.projects);
+  const projectType: ProjectType = useSelector((state: any) => state.classpathConfig.projectType);
   const exception: ClasspathViewException | undefined = useSelector((state: any) => state.classpathConfig.exception);
   let content: JSX.Element;
 
@@ -29,8 +32,9 @@ const ClasspathConfigurationView = (): JSX.Element => {
     content = (
       <div>
         <ProjectSelector />
-        <Sources />
-        <Output />
+        {[ProjectType.Gradle, ProjectType.Maven].includes(projectType) && (<Sources />)}
+        {projectType !== ProjectType.Gradle && projectType !== ProjectType.Maven && (<UnmanagedFolderSources />)}
+        {projectType === ProjectType.UnmanagedFolder && (<Output />)}
         <JdkRuntime />
         <ReferencedLibraries />
       </div>
@@ -76,7 +80,7 @@ interface OnInitializeEvent {
       projectType: string;
     }[];
     vmInstalls?: VmInstall[];
-    sources?: string[];
+    sources?: SourceRoot[];
     output?: string;
     referencedLibraries?: string[];
     exception?: ClasspathViewException;

@@ -10,7 +10,7 @@ import { setOutputPath } from "../classpathConfigurationViewSlice";
 import { VSCodeButton, VSCodeTextArea } from "@vscode/webview-ui-toolkit/react";
 import SectionHeader from "./common/SectionHeader";
 
-const Output = (): JSX.Element => {
+const Output = (): JSX.Element | null => {
     const output: string = useSelector((state: any) => state.classpathConfig.output);
     const projectType: ProjectType = useSelector((state: any) => state.classpathConfig.projectType);
     const dispatch: Dispatch<any> = useDispatch();
@@ -30,9 +30,13 @@ const Output = (): JSX.Element => {
       return () => window.removeEventListener("message", onDidSelectOutputPath);
     }, []);
 
+    if (projectType !== ProjectType.UnmanagedFolder) {
+      return null;
+    }
+
     return (
       <div className="setting-section">
-        <SectionHeader title="Output" subTitle={projectType !== ProjectType.UnmanagedFolder ? "(Read-only)" : undefined} />
+        <SectionHeader title="Output" subTitle={undefined} />
         <span className="setting-section-description">Specify compile output path location.</span>
         <div className="setting-section-target">
           <VSCodeTextArea

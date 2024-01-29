@@ -17,10 +17,15 @@ export interface VmInstall {
 
 export interface ClasspathComponent {
     projectType: ProjectType;
-    sourcePaths: string[];
+    sourcePaths: SourceRoot[];
     defaultOutputPath: string;
     jdkPath: string;
     referenceLibraries: string[];
+}
+
+export interface SourceRoot {
+    path: string;
+    output: string | undefined;
 }
 
 export enum ClasspathViewException {

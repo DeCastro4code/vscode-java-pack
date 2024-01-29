@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { ProjectType } from "../../utils/webview";
+import { SourceRoot } from "../types";
 
 export const WEBVIEW_ID = "java.classpathConfiguration";
 
@@ -34,10 +35,25 @@ export function onWillSelectOutputPath() {
   });
 }
 
+export function onWillUpdateSourcePath(sourcePaths: SourceRoot[]) {
+  vscode.postMessage({
+    command: "onWillUpdateSourcePath",
+    sourcePaths,
+  });
+
+}
+
 export function onWillRemoveSourcePath(sourcePaths: string[]) {
   vscode.postMessage({
     command: "onWillRemoveSourcePath",
     sourcePaths,
+  });
+}
+
+export function onWillBrowseFolder(type: string) {
+  vscode.postMessage({
+    command: "onWillBrowseFolder",
+    type,
   });
 }
 

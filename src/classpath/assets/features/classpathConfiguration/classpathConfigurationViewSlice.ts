@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, current } from "@reduxjs/toolkit";
 import _ from "lodash";
+import { SourceRoot } from "../../../types";
 
 export const classpathConfigurationViewSlice = createSlice({
     name: "classpathConfig",
@@ -12,7 +13,7 @@ export const classpathConfigurationViewSlice = createSlice({
       activeVmInstallPath: "",
       vmInstalls: [],
       projectType: undefined,
-      sources: [] as string[],
+      sources: [] as SourceRoot[],
       output: "",
       referencedLibraries: [] as string[],
       exception: undefined,
@@ -33,7 +34,9 @@ export const classpathConfigurationViewSlice = createSlice({
         state.output = action.payload.output;
         state.activeVmInstallPath = action.payload.activeVmInstallPath;
         // Only update the array when they have different elements.
-        if (isDifferentStringArray(state.sources, action.payload.sources)) {
+        const currentSources = _.sortBy(current(state.sources), ["path", "output"]);
+        const newSources = _.sortBy(action.payload.sources, ["path", "output"]);
+        if (!_.isEqual(currentSources, newSources)) {
           state.sources = action.payload.sources;
         }
         if (isDifferentStringArray(state.referencedLibraries, action.payload.referencedLibraries)) {
