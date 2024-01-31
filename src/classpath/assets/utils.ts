@@ -35,9 +35,9 @@ export function onWillSelectOutputPath() {
   });
 }
 
-export function onWillUpdateSourcePath(sourcePaths: SourceRoot[]) {
+export function onWillUpdateClassPaths(sourcePaths: SourceRoot[]) {
   vscode.postMessage({
-    command: "onWillUpdateSourcePath",
+    command: "onWillUpdateClassPaths",
     sourcePaths,
   });
 

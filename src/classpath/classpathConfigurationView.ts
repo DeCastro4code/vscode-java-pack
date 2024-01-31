@@ -86,8 +86,8 @@ async function initializeWebview(context: vscode.ExtensionContext): Promise<void
                 case "onWillBrowseFolder":
                     await browseFolder(currentProjectRoot, message.type);
                     break;
-                case "onWillUpdateSourcePath":
-                    await updateSourcePaths(currentProjectRoot, message.sourcePaths);
+                case "onWillUpdateClassPaths":
+                    await updateClassPaths(currentProjectRoot, message.sourcePaths);
                     break;
                 case "onWillChangeJdk":
                     await changeJdk(currentProjectRoot, message.jdkPath);
@@ -328,19 +328,19 @@ const browseFolder= instrumentOperation("classpath.browseFolder", async (_operat
     }
 });
 
-const updateSourcePaths = instrumentOperation("classpath.updateSourcePaths", async (_operationId: string, currentProjectRoot: vscode.Uri, sourcePaths: SourceRoot[]) => {
-    const stringifiedSourcePaths: string[] = sourcePaths.map((sourcePath: SourceRoot) => {
-        return JSON.stringify({
+const updateClassPaths = instrumentOperation("classpath.updateClassPaths", async (_operationId: string, currentProjectRoot: vscode.Uri, sourcePaths: SourceRoot[]) => {
+    const stringifiedSourcePaths: SourceRoot[] = sourcePaths.map((sourcePath: SourceRoot) => {
+        return {
             kind: 3,
             path: sourcePath.path,
             output: sourcePath.output,
-        });
+        };
     });
     await vscode.commands.executeCommand(
         "java.execute.workspaceCommand",
-        "java.project.updateSourcePaths",
+        "java.project.updateClassPaths",
         currentProjectRoot.toString(),
-        stringifiedSourcePaths,
+        JSON.stringify({classpathEntries: stringifiedSourcePaths}),
     );
 });
 

@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Dispatch } from "@reduxjs/toolkit";
 import { updateSource } from "../classpathConfigurationViewSlice";
-import { onWillBrowseFolder, onWillUpdateSourcePath } from "../../../utils";
+import { onWillBrowseFolder, onWillUpdateClassPaths } from "../../../utils";
 import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
 import SectionHeader from "./common/SectionHeader";
 import { SourceRoot } from "../../../../types";
@@ -30,7 +30,7 @@ const Sources = (): JSX.Element => {
       }
       updatedSources.push(sourceRoot);
     }
-    onWillUpdateSourcePath(updatedSources);
+    onWillUpdateClassPaths(updatedSources);
     dispatch(updateSource(updatedSources));
   };
 
@@ -63,7 +63,7 @@ const Sources = (): JSX.Element => {
         output: editingOutputPath ?? undefined,
       });
     }
-    onWillUpdateSourcePath(updatedSources);
+    onWillUpdateClassPaths(updatedSources);
     dispatch(updateSource(updatedSources));
     setEditRow(null);
     setEditingSourcePath(null);
