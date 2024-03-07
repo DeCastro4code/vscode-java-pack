@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Dispatch } from "@reduxjs/toolkit";
 import { updateSource } from "../classpathConfigurationViewSlice";
-import { onWillAddSourcePath, onWillRemoveSourcePath } from "../../../utils";
+import { onWillAddSourcePathForUnmanagedFolder } from "../../../utils";
 import { ProjectType } from "../../../../../utils/webview";
 import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow } from "@vscode/webview-ui-toolkit/react";
 import SectionHeader from "./common/SectionHeader";
@@ -27,13 +27,11 @@ const UnmanagedFolderSources = (): JSX.Element => {
       }
       updatedSources.push(sourceRoot);
     }
-    console.log("updatedSources", updatedSources);
-    onWillRemoveSourcePath(updatedSources.map(s => s.path));
     dispatch(updateSource(updatedSources));
   };
 
   const handleAdd = () => {
-    onWillAddSourcePath();
+    onWillAddSourcePathForUnmanagedFolder();
   };
 
   const onDidUpdateSourceFolder = (event: OnDidAddSourceFolderEvent) => {
@@ -65,9 +63,9 @@ const UnmanagedFolderSources = (): JSX.Element => {
         <VSCodeDataGridCell className="setting-section-grid-cell setting-section-grid-cell-readonly" gridColumn="1">
           <span>{source.path}</span>
           {hoveredRow === `sources-${index}` && projectType === ProjectType.UnmanagedFolder && (
-          <VSCodeButton appearance='icon' onClick={() => handleRemove(source.path)}>
-              <span className="codicon codicon-close"></span>
-          </VSCodeButton>
+            <VSCodeButton appearance='icon' onClick={() => handleRemove(source.path)}>
+                <span className="codicon codicon-close"></span>
+            </VSCodeButton>
           )}
         </VSCodeDataGridCell>
       </VSCodeDataGridRow>

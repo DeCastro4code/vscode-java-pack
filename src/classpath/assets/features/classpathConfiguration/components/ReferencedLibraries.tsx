@@ -5,9 +5,9 @@ import { Dispatch } from "@reduxjs/toolkit";
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { removeReferencedLibrary, addReferencedLibraries } from "../classpathConfigurationViewSlice";
-import { onWillAddReferencedLibraries, onWillRemoveReferencedLibraries } from "../../../utils";
+import { onWillSelectLibraries } from "../../../utils";
 import { ProjectType } from "../../../../../utils/webview";
-import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridRow } from "@vscode/webview-ui-toolkit/react";
+import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow } from "@vscode/webview-ui-toolkit/react";
 import SectionHeader from "./common/SectionHeader";
 
 const ReferencedLibraries = (): JSX.Element => {
@@ -19,12 +19,11 @@ const ReferencedLibraries = (): JSX.Element => {
   const dispatch: Dispatch<any> = useDispatch();
 
   const handleRemove = (index: number) => {
-    onWillRemoveReferencedLibraries(referencedLibraries[index]);
     dispatch(removeReferencedLibrary(index));
   };
 
   const handleAdd = () => {
-    onWillAddReferencedLibraries();
+    onWillSelectLibraries();
   };
 
   const onDidAddReferencedLibraries = (event: OnDidAddReferencedLibrariesEvent) => {
@@ -49,12 +48,14 @@ const ReferencedLibraries = (): JSX.Element => {
   } else {
     referencedLibrariesSections = referencedLibraries.map((library, index) => (
       <VSCodeDataGridRow className={`${projectType !== ProjectType.UnmanagedFolder ? "inactive" : ""} setting-section-grid-row`} id={`library-${index}`} onMouseEnter={() => setHoveredRow(`library-${index}`)} onMouseLeave={() => setHoveredRow(null)}  key={library}>
-        <span>{library}</span>
-        {hoveredRow === `library-${index}` && projectType === ProjectType.UnmanagedFolder && (
-          <VSCodeButton appearance='icon' onClick={() => handleRemove(index)}>
-            <span className="codicon codicon-close"></span>
-          </VSCodeButton>
-        )}
+          <VSCodeDataGridCell className="setting-section-grid-cell setting-section-grid-cell-readonly" gridColumn="1">
+          <span>{library}</span>
+          {hoveredRow === `library-${index}` && projectType === ProjectType.UnmanagedFolder && (
+            <VSCodeButton appearance='icon' onClick={() => handleRemove(index)}>
+              <span className="codicon codicon-close"></span>
+            </VSCodeButton>
+          )}
+        </VSCodeDataGridCell>
       </VSCodeDataGridRow>
     ));
   }

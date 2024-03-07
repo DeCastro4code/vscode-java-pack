@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Dispatch } from "@reduxjs/toolkit";
 import { updateSource } from "../classpathConfigurationViewSlice";
-import { onWillBrowseFolder, onWillUpdateClassPaths } from "../../../utils";
+import { onWillBrowseFolder } from "../../../utils";
 import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
 import SectionHeader from "./common/SectionHeader";
 import { SourceRoot } from "../../../../types";
@@ -30,7 +30,6 @@ const Sources = (): JSX.Element => {
       }
       updatedSources.push(sourceRoot);
     }
-    onWillUpdateClassPaths(updatedSources);
     dispatch(updateSource(updatedSources));
   };
 
@@ -63,7 +62,6 @@ const Sources = (): JSX.Element => {
         output: editingOutputPath ?? undefined,
       });
     }
-    onWillUpdateClassPaths(updatedSources);
     dispatch(updateSource(updatedSources));
     setEditRow(null);
     setEditingSourcePath(null);
@@ -149,8 +147,8 @@ const Sources = (): JSX.Element => {
               <span className="codicon codicon-folder-opened"></span>
             </VSCodeButton>
           </VSCodeTextField>
-          <VSCodeButton className="setting-section-grid-button" appearance="primary" onClick={() => handleOK()}>OK</VSCodeButton>
-          <VSCodeButton className="setting-section-grid-button" appearance="secondary" onClick={() => handleCancel()}>
+          <VSCodeButton className="ml-1" appearance="primary" onClick={() => handleOK()}>OK</VSCodeButton>
+          <VSCodeButton className="ml-1" appearance="secondary" onClick={() => handleCancel()}>
             Cancel
           </VSCodeButton>
         </VSCodeDataGridCell>
@@ -212,7 +210,7 @@ const Sources = (): JSX.Element => {
         </VSCodeDataGrid>
       </div>
       {(editRow == null || editRow < sources.length) && 
-          (<VSCodeButton className="setting-section-button" onClick={() => handleAdd()}>Add</VSCodeButton>)}
+          (<VSCodeButton className="mt-1" onClick={() => handleAdd()}>Add</VSCodeButton>)}
     </div>
   );
 };

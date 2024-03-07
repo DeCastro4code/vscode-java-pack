@@ -3,7 +3,7 @@
 
 import React, { Dispatch, useEffect, useState } from "react";
 import { encodeCommandUriWithTelemetry } from "../../../../../utils/webview";
-import { WEBVIEW_ID, onWillChangeJdk } from "../../../utils";
+import { WEBVIEW_ID, onWillAddNewJdk } from "../../../utils";
 import { VSCodeDivider, VSCodeDropdown, VSCodeLink, VSCodeOption, } from "@vscode/webview-ui-toolkit/react";
 import { useDispatch, useSelector } from "react-redux";
 import { VmInstall } from "../../../../types";
@@ -20,9 +20,9 @@ const JdkRuntime = (): JSX.Element => {
   const dispatch: Dispatch<any> = useDispatch();
 
   const handleSelectJdk = (path: string) => {
-    onWillChangeJdk(path);
-    if (path !== "add-new-jdk") {
-      // if the user selects a existing JDK, we directly update the activeVmInstallPath.
+    if (path === "add-new-jdk") {
+      onWillAddNewJdk();
+    } else {
       dispatch(setJdks({activeVmInstallPath: path}));
     }
   }

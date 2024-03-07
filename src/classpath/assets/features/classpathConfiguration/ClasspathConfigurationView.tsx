@@ -17,6 +17,7 @@ import { onWillListProjects, onWillListVmInstalls } from "../../utils";
 import { VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react";
 import { ProjectType } from "../../../../utils/webview";
 import UnmanagedFolderSources from "./components/UnmanagedFolderSources";
+import Footer from "./components/Footer";
 
 const ClasspathConfigurationView = (): JSX.Element => {
   const projects: ProjectInfo[] = useSelector((state: any) => state.classpathConfig.projects);
@@ -31,12 +32,14 @@ const ClasspathConfigurationView = (): JSX.Element => {
   } else {
     content = (
       <div>
-        <ProjectSelector />
-        {[ProjectType.Gradle, ProjectType.Maven].includes(projectType) && (<Sources />)}
-        {projectType !== ProjectType.Gradle && projectType !== ProjectType.Maven && (<UnmanagedFolderSources />)}
-        {projectType === ProjectType.UnmanagedFolder && (<Output />)}
-        <JdkRuntime />
-        <ReferencedLibraries />
+        <div className="mb-12">
+          <ProjectSelector />
+          {[ProjectType.Gradle, ProjectType.Maven].includes(projectType) && (<Sources />)}
+          {projectType !== ProjectType.Gradle && projectType !== ProjectType.Maven && (<UnmanagedFolderSources />)}
+          {projectType === ProjectType.UnmanagedFolder && (<Output />)}
+          <JdkRuntime />
+          <ReferencedLibraries />
+        </div>
       </div>
     );
   }
@@ -67,6 +70,7 @@ const ClasspathConfigurationView = (): JSX.Element => {
     <div className="root">
       <Header />
       {content}
+      <Footer />
     </div>
   );
 };

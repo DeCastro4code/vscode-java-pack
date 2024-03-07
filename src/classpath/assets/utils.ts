@@ -35,6 +35,14 @@ export function onWillSelectOutputPath() {
   });
 }
 
+export function onWillSetOutputPath(outputPath: string) {
+  vscode.postMessage({
+    command: "onWillSetOutputPath",
+    outputPath,
+  });
+
+}
+
 export function onWillUpdateClassPaths(sourcePaths: SourceRoot[]) {
   vscode.postMessage({
     command: "onWillUpdateClassPaths",
@@ -57,9 +65,23 @@ export function onWillBrowseFolder(type: string) {
   });
 }
 
-export function onWillAddSourcePath() {
+export function onWillAddSourcePathForUnmanagedFolder() {
   vscode.postMessage({
-    command: "onWillAddSourcePath"
+    command: "onWillAddSourcePathForUnmanagedFolder"
+  });
+}
+
+export function onWillUpdateSourcePathsForUnmanagedFolder(sourcePaths: string[]) {
+  vscode.postMessage({
+    command: "onWillUpdateSourcePathsForUnmanagedFolder",
+    sourcePaths
+  });
+
+}
+
+export function onWillAddNewJdk() {
+  vscode.postMessage({
+    command: "onWillAddNewJdk"
   });
 }
 
@@ -70,17 +92,18 @@ export function onWillChangeJdk(jdkPath: string) {
   });
 }
 
-export function onWillAddReferencedLibraries() {
+export function onWillSelectLibraries() {
   vscode.postMessage({
-    command: "onWillAddReferencedLibraries"
+    command: "onWillSelectLibraries"
   });
 }
 
-export function onWillRemoveReferencedLibraries(path: string) {
+export function onWillUpdateUnmanagedFolderLibraries(jarFilePaths: string[]) {
   vscode.postMessage({
-    command: "onWillRemoveReferencedLibraries",
-    path,
+    command: "onWillUpdateUnmanagedFolderLibraries",
+    jarFilePaths,
   });
+
 }
 
 export function onClickGotoProjectConfiguration(rootUri: string, projectType: ProjectType) {

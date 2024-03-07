@@ -5,8 +5,8 @@ import React from "react";
 
 const SectionHeader = ({title, subTitle}: SectionHeaderProps): JSX.Element => {
   return (
-    <div className="setting-section-header">
-      <h2 className="setting-section-title">{title}</h2>
+    <div className="setting-section-header pt-1">
+      <h2 className="setting-section-title pr-2">{title}</h2>
       { subTitle && <span>{subTitle}</span> }
     </div>
   );
